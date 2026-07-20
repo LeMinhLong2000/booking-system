@@ -20,12 +20,15 @@ return new class extends Migration
                 ->restrictOnDelete();
 
             $table->string('room_number')->unique();
+            $table->unsignedTinyInteger('floor');
 
             $table->enum('status', [
                 'available',
                 'occupied',
                 'maintenance'
             ])->default('available');
+
+            $table->text('notes')->nullable();
 
             $table->timestamps();
         });

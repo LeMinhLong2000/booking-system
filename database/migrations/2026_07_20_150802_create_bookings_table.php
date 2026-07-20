@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('bookings', function (Blueprint $table) {
+
             $table->id();
 
             $table->foreignId('room_id')
@@ -20,12 +21,13 @@ return new class extends Migration
                 ->restrictOnDelete();
 
             $table->string('guest_name');
-
             $table->string('guest_phone');
+            $table->string('guest_email')->nullable();
 
             $table->date('check_in');
-
             $table->date('check_out');
+
+            $table->decimal('total_price', 10, 2);
 
             $table->enum('status', [
                 'pending',
@@ -34,6 +36,8 @@ return new class extends Migration
                 'checked_out',
                 'cancelled'
             ])->default('pending');
+
+            $table->text('notes')->nullable();
 
             $table->timestamps();
         });
