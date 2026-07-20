@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class RoomType extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'name',
         'price_per_night',
@@ -14,7 +16,6 @@ class RoomType extends Model
         'description',
         'is_active',
     ];
-    use HasFactory;
 
     public function rooms()
     {
