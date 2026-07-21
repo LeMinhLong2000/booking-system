@@ -12,7 +12,7 @@ class StoreRoomTypeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,21 @@ class StoreRoomTypeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => ['required', 'string', 'max:100', 'unique:room_types,name'],
+            'price_per_night' => ['required', 'numeric', 'min:0'],
+            'capacity' => ['required', 'integer', 'min:1'],
+            'description' => ['nullable', 'string'],
+            'is_active' => ['required', 'boolean'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Room type name is required.',
+            'name.unique' => 'Room type name already exists.',
+            'price_per_night.required' => 'Price is required.',
+            'capacity.min' => 'Capacity must be at least 1.',
         ];
     }
 }

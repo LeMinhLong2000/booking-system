@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreRoomTypeRequest;
 use App\Http\Resources\RoomTypeResource;
 use App\Models\RoomType;
 use Illuminate\Http\Request;
@@ -22,9 +23,11 @@ class RoomTypeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreRoomTypeRequest $request)
     {
-        //
+        $roomType = RoomType::create($request->validated());
+
+        return new RoomTypeResource($roomType);
     }
 
     /**
