@@ -7,19 +7,29 @@ use App\Http\Requests\StoreRoomTypeRequest;
 use App\Http\Requests\UpdateRoomTypeRequest;
 use App\Http\Resources\RoomTypeResource;
 use App\Models\RoomType;
+use App\Services\RoomTypeService;
+use App\Traits\ApiResponse;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
 class RoomTypeController extends Controller
 {
+    use ApiResponse;
+
+    public function __construct(
+        protected RoomTypeService $roomTypeService
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $roomTypes = RoomType::latest()->paginate(10);
+        $roomTypes = $this->roomTypeService->getAll();
 
-        return RoomTypeResource::collection($roomTypes);
+        return $this->success(
+            RoomTypeResource::collection($roomTypes)
+        );
     }
 
     /**
@@ -27,9 +37,15 @@ class RoomTypeController extends Controller
      */
     public function store(StoreRoomTypeRequest $request)
     {
-        $roomType = RoomType::create($request->validated());
+        $roomType = $this->roomTypeService->create(
+            $request->validated()
+        );
 
-        return new RoomTypeResource($roomType);
+        return $this->success(
+            new RoomTypeResource($roomType),
+            'Room type created successfully.',
+            201
+        );
     }
 
     /**
@@ -37,7 +53,9 @@ class RoomTypeController extends Controller
      */
     public function show(RoomType $roomType)
     {
-        return new RoomTypeResource($roomType);
+        return $this->success(
+            new RoomTypeResource($roomType)
+        );
     }
 
     /**
@@ -47,9 +65,15 @@ class RoomTypeController extends Controller
         UpdateRoomTypeRequest $request,
         RoomType $roomType
     ) {
-        $roomType->update($request->validated());
+        $roomType = $this->roomTypeService->update(
+            $roomType,
+            $request->validated()
+        );
 
-        return new RoomTypeResource($roomType);
+        return $this->success(
+            new RoomTypeResource($roomType),
+            'Room type updated successfully.'
+        );
     }
 
     /**
@@ -57,16 +81,11 @@ class RoomTypeController extends Controller
      */
     public function destroy(RoomType $roomType)
     {
-        try {
-            $roomType->delete();
+        $this->roomTypeService->delete($roomType);
 
-            return response()->json([
-                'message' => 'Room type deleted successfully.'
-            ], 200);
-        } catch (QueryException $e) {
-            return response()->json([
-                'message' => 'Cannot delete room type because it is being used by one or more rooms.'
-            ], 409);
-        }
+        return $this->success(
+            null,
+            'Room type deleted successfully.'
+        );
     }
 }
