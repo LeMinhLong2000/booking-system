@@ -7,6 +7,7 @@ use App\Http\Requests\StoreRoomTypeRequest;
 use App\Http\Requests\UpdateRoomTypeRequest;
 use App\Http\Resources\RoomTypeResource;
 use App\Models\RoomType;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
 class RoomTypeController extends Controller
@@ -56,10 +57,16 @@ class RoomTypeController extends Controller
      */
     public function destroy(RoomType $roomType)
     {
-        $roomType->delete();
+        try {
+            $roomType->delete();
 
-        return response()->json([
-            'message' => 'Room type deleted successfully.'
-        ], 200);
+            return response()->json([
+                'message' => 'Room type deleted successfully.'
+            ], 200);
+        } catch (QueryException $e) {
+            return response()->json([
+                'message' => 'Cannot delete room type because it is being used by one or more rooms.'
+            ], 409);
+        }
     }
 }
