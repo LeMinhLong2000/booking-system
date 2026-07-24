@@ -24,17 +24,11 @@ class BookingService
 
     public function create(array $data): Booking
     {
-        if (! $this->isRoomAvailable(
+        $this->ensureRoomIsAvailable(
             $data['room_id'],
             $data['check_in'],
             $data['check_out']
-        )) {
-            throw ValidationException::withMessages([
-                'room_id' => [
-                    'The room is not available for the selected dates.'
-                ]
-            ]);
-        }
+        );
 
         return Booking::create($data);
     }
@@ -43,6 +37,13 @@ class BookingService
         Booking $booking,
         array $data
     ): Booking {
+
+        $this->ensureRoomIsAvailable(
+            $data['room_id'],
+            $data['check_in'],
+            $data['check_out'],
+            $booking->id
+        );
 
         $booking->update($data);
 
@@ -59,9 +60,10 @@ class BookingService
     private function isRoomAvailable(
         int $roomId,
         string $checkIn,
-        string $checkOut
+        string $checkOut,
+        ?int $ignoreBookingId = null
     ): bool {
-        $hasConflict = Booking::query()
+        $query = Booking::query()
             ->where('room_id', $roomId)
             ->whereIn('status', [
                 'pending',
@@ -72,9 +74,32 @@ class BookingService
                 $query
                     ->where('check_in', '<', $checkOut)
                     ->where('check_out', '>', $checkIn);
-            })
-            ->exists();
+            });
 
-        return !$hasConflict;
+        if ($ignoreBookingId !== null) {
+            $query->where('id', '!=', $ignoreBookingId);
+        }
+
+        return ! $query->exists();
+    }
+
+    private function ensureRoomIsAvailable(
+        int $roomId,
+        string $checkIn,
+        string $checkOut,
+        ?int $ignoreBookingId = null
+    ): void {
+        if (! $this->isRoomAvailable(
+            $roomId,
+            $checkIn,
+            $checkOut,
+            $ignoreBookingId
+        )) {
+            throw ValidationException::withMessages([
+                'room_id' => [
+                    'The room is not available for the selected dates.'
+                ]
+            ]);
+        }
     }
 }
