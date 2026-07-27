@@ -7,6 +7,7 @@ use App\Models\Room;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use App\Services\RoomService;
+use Carbon\Carbon;
 
 class BookingService
 {
@@ -52,30 +53,58 @@ class BookingService
 
     public function create(array $data): Booking
     {
-        $this->ensureRoomIsAvailable(
-            $data['room_id'],
-            $data['check_in'],
-            $data['check_out']
-        );
+        return DB::transaction(function () use ($data) {
+            // lấy room
+            $room = Room::with('roomType')
+                ->findOrFail($data['room_id']);
 
-        return Booking::create($data);
+            // check
+            $this->ensureRoomIsAvailable(
+                $data['room_id'],
+                $data['check_in'],
+                $data['check_out']
+            );
+
+            // calculate
+            $data['total_price'] =
+                $this->calculateTotalPrice(
+                    $room,
+                    $data['check_in'],
+                    $data['check_out']
+                );
+
+            return Booking::create($data);
+        });
     }
 
     public function update(
         Booking $booking,
         array $data
     ): Booking {
+        return DB::transaction(function () use ($booking, $data) {
 
-        $this->ensureRoomIsAvailable(
-            $data['room_id'],
-            $data['check_in'],
-            $data['check_out'],
-            $booking->id
-        );
+            $room = Room::with('roomType')
+                ->findOrFail($data['room_id']);
 
-        $booking->update($data);
+            $this->ensureRoomIsAvailable(
+                $data['room_id'],
+                $data['check_in'],
+                $data['check_out'],
+                $booking->id
+            );
 
-        return $booking->load('room');
+            $data['total_price'] =
+                $this->calculateTotalPrice(
+                    $room,
+                    $data['check_in'],
+                    $data['check_out']
+                );
+
+
+            $booking->update($data);
+
+            return $booking->load('room');
+        });
     }
 
     public function delete(
@@ -200,5 +229,19 @@ class BookingService
 
                 break;
         }
+    }
+
+    private function calculateTotalPrice(
+        Room $room,
+        string $checkIn,
+        string $checkOut
+    ): float {
+
+        $pricePerNight = $room->roomType->price_per_night;
+
+        $nights = Carbon::parse($checkIn)
+            ->diffInDays(Carbon::parse($checkOut));
+
+        return $pricePerNight * $nights;
     }
 }
