@@ -36,4 +36,35 @@ class RoomService
     {
         return $room->delete();
     }
+
+    public function markOccupied(Room $room): Room
+    {
+        $room->update([
+            'status' => 'occupied'
+        ]);
+
+        return $room->fresh();
+    }
+
+    public function markAvailable(Room $room): Room
+    {
+        if ($room->status === 'maintenance') {
+            return $room;
+        }
+
+        $room->update([
+            'status' => 'available'
+        ]);
+
+        return $room->fresh();
+    }
+
+    public function markMaintenance(Room $room): Room
+{
+    $room->update([
+        'status' => 'maintenance'
+    ]);
+
+    return $room->fresh();
+}
 }

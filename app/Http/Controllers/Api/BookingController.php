@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ChangeBookingStatusRequest;
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Requests\UpdateBookingRequest;
 use App\Http\Resources\BookingResource;
@@ -85,6 +86,23 @@ class BookingController extends Controller
         return $this->success(
             null,
             'Booking deleted successfully.'
+        );
+    }
+
+
+    public function changeStatus(
+        ChangeBookingStatusRequest $request,
+        Booking $booking
+    ) {
+        $booking = $this->bookingService
+            ->changeStatus(
+                $booking,
+                $request->status
+            );
+
+        return $this->success(
+            new BookingResource($booking),
+            'Booking status updated.'
         );
     }
 }

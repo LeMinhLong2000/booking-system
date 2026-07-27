@@ -8,3 +8,8 @@ use App\Http\Controllers\Api\RoomTypeController;
 Route::apiResource('room-types', RoomTypeController::class);
 Route::apiResource('rooms', RoomController::class);
 Route::apiResource('bookings', BookingController::class);
+
+Route::patch(
+    'bookings/{booking}/status',
+    [BookingController::class, 'changeStatus']
+);
