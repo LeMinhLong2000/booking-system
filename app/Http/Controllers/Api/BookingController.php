@@ -21,12 +21,10 @@ class BookingController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $bookings = $this->bookingService->getAll();
-
-        return $this->success(
-            BookingResource::collection($bookings)
+        return BookingResource::collection(
+            $this->bookingService->getAll($request)
         );
     }
 

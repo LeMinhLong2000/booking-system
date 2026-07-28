@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use App\Services\RoomService;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class BookingService
 {
@@ -37,12 +38,26 @@ class BookingService
     ) {}
 
 
-    public function getAll()
+    public function getAll(Request $request)
     {
-        return Booking::query()
+        $query = Booking::query()
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->search;
+
+                $q->where(function ($subQuery) use ($search) {
+                    $subQuery->where('guest_name', 'like', "%{$search}%")
+                        ->orWhere('guest_phone', 'like', "%{$search}%")
+                        ->orWhere('guest_email', 'like', "%{$search}%");
+                });
+            })
+            ->when($request->filled('status'), fn($q) => $q->where('status', $request->status))
+            ->when($request->filled('room_id'), fn($q) => $q->where('room_id', $request->room_id))
             ->with('room')
-            ->latest()
-            ->paginate(10);
+            ->latest();
+
+        $perPage = min((int) $request->get('per_page', 10), 100);
+
+        return $query->paginate($perPage);
     }
 
     public function getById(int $id): Booking
